@@ -2,6 +2,8 @@ from django.db import models
 from django.contrib.auth.models import BaseUserManager, AbstractBaseUser
 
 # Create your models here.
+
+
 class UserManager(BaseUserManager):
     def create_user(self, email=None, password=None):
         if not email:
@@ -15,6 +17,7 @@ class UserManager(BaseUserManager):
         user.save(using=self._db)
 
         return user
+
     def create_superuser(self, email, password):
         user = self.create_user(
             email=email,
@@ -25,12 +28,14 @@ class UserManager(BaseUserManager):
         user.save(using=self._db)
 
         return user
+
         @classmethod
         def create_from_dict(cls, d):
-            return cls.objects.create() 
+            return cls.objects.create()
+
 
 class User(AbstractBaseUser):
-    name = models.CharField(max_length=255, blank=True,null=True)
+    name = models.CharField(max_length=255, blank=True, null=True)
     email = models.EmailField(unique=True, null=True)
     phone = models.CharField(max_length=255, blank=True, null=True)
     is_admin = models.BooleanField(default=False)
@@ -38,7 +43,7 @@ class User(AbstractBaseUser):
     cpf = models.CharField(max_length=255, blank=True, null=True)
     updated_at = models.DateTimeField(auto_now=True)
     created_at = models.DateTimeField(auto_now=True)
-   
+
     objects = UserManager()
 
     USERNAME_FIELD = 'email'
@@ -55,3 +60,36 @@ class User(AbstractBaseUser):
     @property
     def is_staff(self):
         return self.is_admin
+
+
+class Subject(models.Model):
+    title = models.CharField(max_length=255, blank=True, null=True)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    created_at = models.DateTimeField(auto_now=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return self.title
+
+
+class Question(models.Model):
+    title = models.CharField(max_length=255, blank=True, null=True)
+    subject = models.ForeignKey(Subject, on_delete=models.CASCADE)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    text = models.TextField(max_length=255, blank=True, null=True)
+    created_at = models.DateTimeField(auto_now=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return '{} - {}'.format(self.title, self.user.name)
+
+
+class Answer(models.Model):
+    question = models.ForeignKey(Question, on_delete=models.CASCADE)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    text = models.TextField(max_length=255, blank=True, null=True)
+    created_at = models.DateTimeField(auto_now=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return '{} - {}'.format(self.question.title, self.user.name)
